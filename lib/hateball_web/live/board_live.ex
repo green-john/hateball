@@ -35,8 +35,14 @@ defmodule HateballWeb.BoardLive do
   def handle_event("draw_answer", _, socket) do
     Cards.draw_answer(socket.id)
 
-
     {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
+  end
+
+  def handle_event("play_answer", %{"idx" => idx}, socket) do
+    {number, _space} = Integer.parse(idx)
+    IO.puts "playing #{inspect idx} #{inspect Enum.at(socket.assigns.answers, number)}"
+
+    {:noreply, socket}
   end
 
   def handle_info(%{event: "presence_diff", payload: payload}, socket) do
@@ -49,7 +55,6 @@ defmodule HateballWeb.BoardLive do
   def handle_info({:reload_question}, socket) do
     {:noreply, assign(socket, question: Cards.get_question())}
   end
-
 
   defp get_connected_users() do
     Presence.list("cards")

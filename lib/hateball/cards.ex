@@ -32,25 +32,32 @@ defmodule Hateball.Cards do
       __MODULE__,
       fn data ->
         {top, rest} = draw_from_pile(data.answer_pile)
-        IO.puts "top: #{inspect top} rest: #{inspect rest}"
-
         if rest == "" do
           data
         else
-          players = if Map.has_key?(data.players, player_id) do
-            data.players
+          cards_in_hand = if Map.has_key?(data.cards_in_hand, player_id) do
+            data.cards_in_hand
           else
-            Map.put(data.players, player_id, [])
+            Map.put(data.cards_in_hand, player_id, [])
           end
 
-          player_cards = players[player_id]
+          player_cards = cards_in_hand[player_id]
           Map.put(
             data,
-            :players,
-            Map.put(players, player_id, [top | player_cards])
+            :cards_in_hand,
+            Map.put(cards_in_hand, player_id, [top | player_cards])
           )
           |> Map.put(:answer_pile, rest)
         end
+      end
+    )
+  end
+
+  def play_card(player_id, card_idx) do
+    Agent.update(
+    __MODULE__,
+      fn data ->
+        {card, player_cards} = data.cards_in_hand
       end
     )
   end
@@ -60,7 +67,7 @@ defmodule Hateball.Cards do
   end
 
   def get_answers(player_id) do
-    case Agent.get(__MODULE__, fn data -> data.players[player_id] end) do
+    case Agent.get(__MODULE__, fn data -> data.cards_in_hand[player_id] end) do
       nil -> []
       x -> x
     end

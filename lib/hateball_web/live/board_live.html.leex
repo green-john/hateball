@@ -1,7 +1,7 @@
 <div class="cards-container">
     <div class="public">
         <div>Question: <%= @question %> </div>
-        <div>Answers: <%= @question %> </div>
+        <!--<div>Answers: <%= @question %> </div>-->
     </div>
 
     <div class="actions">
@@ -15,8 +15,10 @@
     </div>
 
     <div class="cards">
-        <%= for card <- @answers do %>
-            <div><%= [card] %></div>
+        <%= for {card, idx} <- Enum.with_index(@answers) do %>
+            <div class="card" phx-click="play_answer" phx-value-idx="<%= idx %>">
+                <%= card %>
+            </div>
         <% end %>
     </div>
 

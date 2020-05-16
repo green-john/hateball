@@ -18,7 +18,8 @@ defmodule Hateball.Application do
           question_card: "",
           question_pile: Constants.get_questions,
           answer_pile: Constants.get_answers,
-          players: %{}
+          cards_in_hand: %{},
+          played_cards: %{},
         }
       },
       HateballWeb.Presence,
