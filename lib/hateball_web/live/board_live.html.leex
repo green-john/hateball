@@ -1,0 +1,14 @@
+<div>Q: <%= @top_question %> </div>
+
+<button phx-click="drawQuestion">
+    DrawQ
+</button>
+
+
+<hr>
+
+<%= for name <- @players do %>
+    <em><%= [name] %></em> <br>
+<% end%>
+
+
