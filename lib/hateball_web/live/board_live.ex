@@ -6,7 +6,7 @@ defmodule HateballWeb.BoardLive do
 
   def mount(_params, _session, socket) do
     if connected?(socket) do
-      Phoenix.PubSub.subscribe(Hateball.PubSub, "cards")
+      subscribe()
 
       Presence.track(
         self(),
@@ -28,13 +28,13 @@ defmodule HateballWeb.BoardLive do
   def handle_event("draw_question", _, socket) do
     Cards.draw_question()
 
-    {:noreply, assign(socket, question: Cards.get_question())}
+    broadcast({:reload_question})
+    {:noreply, socket}
   end
 
   def handle_event("draw_answer", _, socket) do
     Cards.draw_answer(socket.id)
 
-    Cards.inspect_data()
 
     {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
   end
@@ -46,9 +46,22 @@ defmodule HateballWeb.BoardLive do
     {:noreply, assign(socket, players: users)}
   end
 
+  def handle_info({:reload_question}, socket) do
+    {:noreply, assign(socket, question: Cards.get_question())}
+  end
+
+
   defp get_connected_users() do
     Presence.list("cards")
     |> Enum.map(fn ({user_id, _data}) -> user_id end)
+  end
+
+  defp subscribe() do
+    Phoenix.PubSub.subscribe(Hateball.PubSub, "cards")
+  end
+
+  defp broadcast(event) do
+    Phoenix.PubSub.broadcast(Hateball.PubSub, "cards", event)
   end
 
 end

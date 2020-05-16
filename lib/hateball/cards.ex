@@ -43,16 +43,13 @@ defmodule Hateball.Cards do
             Map.put(data.players, player_id, [])
           end
 
-          IO.puts "players #{inspect players}"
-
           player_cards = players[player_id]
-          IO.puts "player cards #{inspect player_cards}"
-
           Map.put(
             data,
             :players,
             Map.put(players, player_id, [top | player_cards])
           )
+          |> Map.put(:answer_pile, rest)
         end
       end
     )
