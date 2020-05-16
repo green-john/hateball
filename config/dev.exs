@@ -1,13 +1,14 @@
 use Mix.Config
 
 # Configure your database
-config :hateball, Hateball.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "hateball_dev",
-  hostname: "localhost",
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+config :hateball,
+       Hateball.Repo,
+       username: "postgres",
+       password: "postgres",
+       database: "hateball_dev",
+       hostname: "localhost",
+       show_sensitive_data_on_connection_error: true,
+       pool_size: 10
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
@@ -15,20 +16,23 @@ config :hateball, Hateball.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
-config :hateball, HateballWeb.Endpoint,
-  http: [port: 4000],
-  debug_errors: true,
-  code_reloader: true,
-  check_origin: false,
-  watchers: [
-    node: [
-      "node_modules/webpack/bin/webpack.js",
-      "--mode",
-      "development",
-      "--watch-stdin",
-      cd: Path.expand("../assets", __DIR__)
-    ]
-  ]
+config :hateball,
+       HateballWeb.Endpoint,
+       http: [
+         port: 4000
+       ],
+       debug_errors: true,
+       code_reloader: true,
+       check_origin: false,
+       watchers: [
+         node: [
+           "node_modules/webpack/bin/webpack.js",
+           "--mode",
+           "development",
+           "--watch-stdin",
+           cd: Path.expand("../assets", __DIR__)
+         ]
+       ]
 
 # ## SSL Support
 #
@@ -55,15 +59,17 @@ config :hateball, HateballWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :hateball, HateballWeb.Endpoint,
-  live_reload: [
-    patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
-      ~r"priv/gettext/.*(po)$",
-      ~r"lib/hateball_web/(live|views)/.*(ex)$",
-      ~r"lib/hateball_web/templates/.*(eex)$"
-    ]
-  ]
+config :hateball,
+       HateballWeb.Endpoint,
+       live_reload: [
+         patterns: [
+           ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+           ~r"priv/gettext/.*(po)$",
+           ~r"lib/hateball_web/(live|views)/.*(ex)$",
+           ~r"lib/hateball_web/templates/.*(eex)$",
+           ~r"lib/hateball/cards.ex$"
+         ]
+       ]
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

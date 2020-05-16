@@ -2,10 +2,11 @@ defmodule HateballWeb.BoardLive do
   use HateballWeb, :live_view
 
   alias HateballWeb.Presence
+  alias Hateball.Cards
 
   def mount(_params, _session, socket) do
     if connected?(socket) do
-      HateballWeb.Endpoint.subscribe("cards")
+      Phoenix.PubSub.subscribe(Hateball.PubSub, "cards")
 
       Presence.track(
         self(),
@@ -17,28 +18,30 @@ defmodule HateballWeb.BoardLive do
 
     socket = assign(
       socket,
-      top_question: "",
-      question_pile: ["a", "b"],
-      answer_pile: ["c", "d"],
-      players: []
+      question: Cards.get_question(),
+      answers: Cards.get_answers(socket.id),
+      players: %{}
     )
     {:ok, socket}
   end
 
-  def handle_event("drawQuestion", _, socket) do
-    socket = case socket.assigns.question_pile do
-      [top | rest] -> assign(socket, question_pile: rest, top_question: top)
-      _ -> assign(socket, question_pile: [], top_question: "")
-    end
+  def handle_event("draw_question", _, socket) do
+    Cards.draw_question()
 
-    Hateball.Cards.sum(3, 4)
+    {:noreply, assign(socket, question: Cards.get_question())}
+  end
 
-    {:noreply, socket}
+  def handle_event("draw_answer", _, socket) do
+    Cards.draw_answer(socket.id)
+
+    Cards.inspect_data()
+
+    {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
   end
 
   def handle_info(%{event: "presence_diff", payload: payload}, socket) do
     users = get_connected_users()
-#    IO.puts "in: #{inspect socket.id} msg: #{inspect socket}"
+    #    IO.puts "in: #{inspect socket.id} msg: #{inspect socket}"
 
     {:noreply, assign(socket, players: users)}
   end

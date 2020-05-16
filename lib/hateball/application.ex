@@ -3,6 +3,8 @@ defmodule Hateball.Application do
   # for more information on OTP Applications
   @moduledoc false
 
+  alias Hateball.Cards.Constants
+
   use Application
 
   def start(_type, _args) do
@@ -10,7 +12,15 @@ defmodule Hateball.Application do
       #            Hateball.Repo,
       HateballWeb.Telemetry,
       {Phoenix.PubSub, name: Hateball.PubSub},
-      {Hateball.Cards, %{question_card: ""}},
+      {
+        Hateball.Cards,
+        %{
+          question_card: "",
+          question_pile: Constants.get_questions,
+          answer_pile: Constants.get_answers,
+          players: %{}
+        }
+      },
       HateballWeb.Presence,
       HateballWeb.Endpoint,
       # Start a worker by calling: Hateball.Worker.start_link(arg)

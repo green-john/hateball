@@ -1,9 +1,18 @@
-<div>Q: <%= @top_question %> </div>
+<div>Question: <%= @question %> </div>
 
-<button phx-click="drawQuestion">
-    DrawQ
+<div>
+<%= for card <- @answers do %>
+    <div><%= [card] %></div>
+<% end %>
+</div>
+
+<button phx-click="draw_question">
+    Draw Question
 </button>
 
+<button phx-click="draw_answer">
+    Draw Answer
+</button>
 
 <hr>
 
