@@ -604,11 +604,19 @@ defmodule Hateball.Cards.Constants do
   ]
 
   def get_questions do
-    @questions
+    Enum.filter(@questions, fn card -> count_blanks(card) == 1 end)
   end
 
   def get_answers do
     @answers
+  end
+
+  defp count_blanks(str) do
+    len = str
+    |> String.split("______")
+    |> length()
+
+    len - 1
   end
 
 

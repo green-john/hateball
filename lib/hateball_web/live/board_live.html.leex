@@ -1,23 +1,29 @@
-<div>Question: <%= @question %> </div>
+<div class="cards-container">
+    <div class="public">
+        <div>Question: <%= @question %> </div>
+        <div>Answers: <%= @question %> </div>
+    </div>
 
-<div>
-<%= for card <- @answers do %>
-    <div><%= [card] %></div>
-<% end %>
+    <div class="actions">
+        <button phx-click="draw_question">
+            Draw Question
+        </button>
+
+        <button phx-click="draw_answer">
+            Draw Answer
+        </button>
+    </div>
+
+    <div class="cards">
+        <%= for card <- @answers do %>
+            <div><%= [card] %></div>
+        <% end %>
+    </div>
+
+    <div class="users">
+        <%= for name <- @players do %>
+            <div><%= [name] %></div>
+        <% end%>
+    </div>
 </div>
-
-<button phx-click="draw_question">
-    Draw Question
-</button>
-
-<button phx-click="draw_answer">
-    Draw Answer
-</button>
-
-<hr>
-
-<%= for name <- @players do %>
-    <em><%= [name] %></em> <br>
-<% end%>
-
 
