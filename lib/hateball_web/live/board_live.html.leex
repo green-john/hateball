@@ -1,16 +1,21 @@
 <div class="cards-container">
     <div class="public">
-        <div>Question: <%= @question %> </div>
-        <!--<div>Answers: <%= @question %> </div>-->
+        <div><%= @question %> </div>
+
+        <div class="answers">
+        <%= for card <- @played_cards do %>
+            <div><%= [card] %></div>
+        <% end%>
+        </div>
     </div>
 
     <div class="actions">
         <button phx-click="draw_question">
-            Draw Question
+            Question
         </button>
 
         <button phx-click="draw_answer">
-            Draw Answer
+            Answer
         </button>
     </div>
 

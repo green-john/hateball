@@ -16,10 +16,10 @@ defmodule HateballWeb.Router do
 
   scope "/", HateballWeb do
     pipe_through :browser
-
     live "/", PageLive, :index
-
     live "/cards", BoardLive
+
+    get "/cards/:game_id", Controllers.Cards, :start_game
   end
 
   # Other scopes may use custom stacks.

@@ -20,7 +20,8 @@ defmodule HateballWeb.BoardLive do
       socket,
       question: Cards.get_question(),
       answers: Cards.get_answers(socket.id),
-      players: %{}
+      players: %{},
+      played_cards: [],
     )
     {:ok, socket}
   end
@@ -39,21 +40,23 @@ defmodule HateballWeb.BoardLive do
   end
 
   def handle_event("play_answer", %{"idx" => idx}, socket) do
-    {number, _space} = Integer.parse(idx)
-    IO.puts "playing #{inspect idx} #{inspect Enum.at(socket.assigns.answers, number)}"
-
-    {:noreply, socket}
+    {number, ""} = Integer.parse(idx)
+    Cards.play_card(socket.id, number)
+    broadcast({:reload_played_cards})
+    {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
   end
 
   def handle_info(%{event: "presence_diff", payload: payload}, socket) do
     users = get_connected_users()
-    #    IO.puts "in: #{inspect socket.id} msg: #{inspect socket}"
-
     {:noreply, assign(socket, players: users)}
   end
 
   def handle_info({:reload_question}, socket) do
     {:noreply, assign(socket, question: Cards.get_question())}
+  end
+
+  def handle_info({:reload_played_cards}, socket) do
+    {:noreply, assign(socket, played_cards: Cards.get_played_cards(get_connected_users()))}
   end
 
   defp get_connected_users() do

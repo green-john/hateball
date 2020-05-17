@@ -55,11 +55,34 @@ defmodule Hateball.Cards do
 
   def play_card(player_id, card_idx) do
     Agent.update(
-    __MODULE__,
+      __MODULE__,
       fn data ->
-        {card, player_cards} = data.cards_in_hand
+        {card, remaining_cards_in_hand} = List.pop_at(
+          data.cards_in_hand[player_id],
+          card_idx
+        )
+
+        data
+        |> Map.put(
+             :cards_in_hand,
+             Map.put(data.cards_in_hand, player_id, remaining_cards_in_hand)
+           )
+        |> Map.put(
+             :played_cards,
+             Map.put(data.played_cards, player_id, card)
+           )
       end
     )
+  end
+
+  def get_played_cards(player_ids) do
+    cards = Agent.get(__MODULE__, fn data -> data.played_cards end)
+            |> Enum.filter(fn {k, _} -> Enum.member?(player_ids, k) end)
+            |> Enum.map(fn {_, v} -> v end)
+
+    IO.puts "cards: #{inspect cards}"
+
+    cards
   end
 
   def get_question() do
