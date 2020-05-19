@@ -30,6 +30,7 @@ defmodule HateballWeb.BoardLive do
     Cards.draw_question()
 
     broadcast({:reload_question})
+    broadcast({:reload_played_cards})
     {:noreply, socket}
   end
 
@@ -42,6 +43,12 @@ defmodule HateballWeb.BoardLive do
   def handle_event("play_answer", %{"idx" => idx}, socket) do
     {number, ""} = Integer.parse(idx)
     Cards.play_card(socket.id, number)
+    broadcast({:reload_played_cards})
+    {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
+  end
+
+  def handle_event("turn_card", %{"player_id" => player_id}, socket) do
+    Cards.turn_card(player_id)
     broadcast({:reload_played_cards})
     {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
   end

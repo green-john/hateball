@@ -1,14 +1,4 @@
 <div class="cards-container">
-    <div class="public">
-        <div><%= @question %> </div>
-
-        <div class="answers">
-        <%= for card <- @played_cards do %>
-            <div><%= [card] %></div>
-        <% end%>
-        </div>
-    </div>
-
     <div class="actions">
         <button phx-click="draw_question">
             Question
@@ -19,17 +9,31 @@
         </button>
     </div>
 
-    <div class="cards">
-        <%= for {card, idx} <- Enum.with_index(@answers) do %>
-            <div class="card" phx-click="play_answer" phx-value-idx="<%= idx %>">
-                <%= card %>
-            </div>
+    <div class="public">
+        <div><%= @question %> </div>
+
+        <div class="answers">
+        <ol class="public-card-list">
+        <%= for {player_id, card} <- @played_cards do %>
+            <li class="public-card" phx-click="turn_card" phx-value-player_id="<%= player_id %>"
+                ><%= card %></li>
         <% end %>
+        </ol>
+        </div>
+    </div>
+
+    <div class="cards">
+        <ol class="public-card-list">
+        <%= for {card, idx} <- Enum.with_index(@answers) do %>
+            <li class="card" phx-click="play_answer" phx-value-idx="<%= idx %>"
+                ><%=card%></li>
+        <% end %>
+        </ol>
     </div>
 
     <div class="users">
         <%= for name <- @players do %>
-            <div><%= [name] %></div>
+            <div><%= name %></div>
         <% end%>
     </div>
 </div>

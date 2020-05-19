@@ -14,6 +14,7 @@ defmodule Hateball.Cards do
 
         Map.put(data, :question_card, top)
         |> Map.put(:question_pile, rest)
+        |> Map.put(:played_cards, %{})
       end
     )
   end
@@ -69,7 +70,7 @@ defmodule Hateball.Cards do
            )
         |> Map.put(
              :played_cards,
-             Map.put(data.played_cards, player_id, card)
+             Map.put(data.played_cards, player_id, {card, false})
            )
       end
     )
@@ -78,7 +79,7 @@ defmodule Hateball.Cards do
   def get_played_cards(player_ids) do
     cards = Agent.get(__MODULE__, fn data -> data.played_cards end)
             |> Enum.filter(fn {k, _} -> Enum.member?(player_ids, k) end)
-            |> Enum.map(fn {_, v} -> v end)
+            |> Enum.map(fn {k, {c, t}} -> {k, (if not t, do: "*****.", else: c)} end)
 
     IO.puts "cards: #{inspect cards}"
 
@@ -94,6 +95,21 @@ defmodule Hateball.Cards do
       nil -> []
       x -> x
     end
+  end
+
+  def turn_card(player_id) do
+    Agent.update(
+      __MODULE__,
+      fn data ->
+        {card, turned} = Map.get(data.played_cards, player_id)
+
+        Map.put(
+          data,
+          :played_cards,
+          Map.put(data.played_cards, player_id, {card, not turned})
+        )
+      end
+    )
   end
 
   defp draw_from_pile(pile) do

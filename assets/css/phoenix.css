@@ -56,13 +56,24 @@ body {
 
 .card {
     padding: .4rem;
-    overflow: hidden;
+    overflow: visible;
     text-decoration: underline;
 }
 
 .card:hover {
-    overflow: visible;
     cursor: pointer;
+}
+
+.public-card:hover {
+    cursor: pointer;
+}
+
+.public-card {
+    /*text-decoration: underline;*/
+}
+
+ol.public-card-list {
+    list-style-position: inside;
 }
 
 .button, button, input[type='button'], input[type='reset'], input[type='submit'] {
