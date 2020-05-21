@@ -18,7 +18,19 @@ import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let username = window.localStorage.getItem("username")
+
+if (!username) {
+    username = prompt("Username (15 chars max)").substring(0, 15);
+    window.localStorage.setItem("username", username);
+}
+
+let liveSocket = new LiveSocket("/live", Socket, {
+    params: {
+        _csrf_token: csrfToken,
+        username: username
+    }
+})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => NProgress.start())

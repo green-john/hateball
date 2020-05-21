@@ -4,30 +4,41 @@ defmodule HateballWeb.BoardLive do
   alias HateballWeb.Presence
   alias Hateball.Cards
 
-  def mount(_params, _session, socket) do
-    if connected?(socket) do
-      subscribe()
+  def mount(_params, %{"game_id" => game_id}, socket) do
+    username =
+      if connected?(socket) do
+        subscribe()
 
-      Presence.track(
-        self(),
-        "cards",
-        socket.id,
-        %{}
+        connect_params = get_connect_params(socket)
+        %{"username" => username} = connect_params
+
+        Presence.track(
+          self(),
+          "cards",
+          username,
+          %{}
+        )
+
+        username
+      else
+        ""
+      end
+    {
+      :ok,
+      assign(
+        socket,
+        game_id: game_id,
+        username: username,
+        question: Cards.get_question(game_id),
+        answers: Cards.get_answers(game_id, username),
+        player_scores: get_connected_users(),
+        played_cards: Cards.get_played_cards(game_id, get_connected_users())
       )
-    end
-
-    socket = assign(
-      socket,
-      question: Cards.get_question(),
-      answers: Cards.get_answers(socket.id),
-      players: %{},
-      played_cards: [],
-    )
-    {:ok, socket}
+    }
   end
 
   def handle_event("draw_question", _, socket) do
-    Cards.draw_question()
+    Cards.draw_question(socket.assigns.game_id)
 
     broadcast({:reload_question})
     broadcast({:reload_played_cards})
@@ -35,35 +46,72 @@ defmodule HateballWeb.BoardLive do
   end
 
   def handle_event("draw_answer", _, socket) do
-    Cards.draw_answer(socket.id)
+    username = socket.assigns.username
+    Cards.draw_answer(socket.assigns.game_id, username)
 
-    {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
+    {
+      :noreply,
+      assign(
+        socket,
+        answers: Cards.get_answers(socket.assigns.game_id, username)
+      )
+    }
   end
 
   def handle_event("play_answer", %{"idx" => idx}, socket) do
+    username = socket.assigns.username
     {number, ""} = Integer.parse(idx)
-    Cards.play_card(socket.id, number)
+    Cards.play_card(socket.assigns.game_id, username, number)
     broadcast({:reload_played_cards})
-    {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
+    {
+      :noreply,
+      assign(
+        socket,
+        answers: Cards.get_answers(socket.assigns.game_id, username)
+      )
+    }
   end
 
   def handle_event("turn_card", %{"player_id" => player_id}, socket) do
-    Cards.turn_card(player_id)
+    Cards.turn_card(socket.assigns.game_id, player_id)
     broadcast({:reload_played_cards})
-    {:noreply, assign(socket, answers: Cards.get_answers(socket.id))}
+    {:noreply, socket}
+  end
+
+  def handle_event("add_point", _params, socket) do
+    Cards.score_one(socket.assigns.game_id, socket.assigns.username)
+    broadcast({:reload_player_scores})
+    {:noreply, socket}
   end
 
   def handle_info(%{event: "presence_diff", payload: payload}, socket) do
     users = get_connected_users()
-    {:noreply, assign(socket, players: users)}
+    broadcast({:reload_player_scores})
+    {:noreply, socket}
   end
 
   def handle_info({:reload_question}, socket) do
-    {:noreply, assign(socket, question: Cards.get_question())}
+    {
+      :noreply,
+      assign(
+        socket,
+        question: Cards.get_question(socket.assigns.game_id)
+      )
+    }
   end
 
   def handle_info({:reload_played_cards}, socket) do
-    {:noreply, assign(socket, played_cards: Cards.get_played_cards(get_connected_users()))}
+    {
+      :noreply,
+      assign(socket, played_cards: Cards.get_played_cards(socket.assigns.game_id, get_connected_users()))
+    }
+  end
+
+  def handle_info({:reload_player_scores}, socket) do
+    {
+      :noreply,
+      assign(socket, player_scores: Cards.get_player_scores(socket.assigns.game_id, get_connected_users()))
+    }
   end
 
   defp get_connected_users() do

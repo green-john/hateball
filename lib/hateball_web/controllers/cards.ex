@@ -1,13 +1,44 @@
-defmodule HateballWeb.Controllers.Cards do
+defmodule HateballWeb.CardsController do
   use HateballWeb, :controller
+  alias Hateball.GameCatalog
   alias HateballWeb.BoardLive
   import Phoenix.LiveView.Controller
 
   def start_game(conn, params) do
-    IO.puts "conn #{inspect conn}"
-    IO.puts "params #{inspect params}"
+    game_id = gen_random_url()
+    GameCatalog.add_game(game_id)
 
-    live_render(conn, BoardLive)
+    redirect(conn, to: "/cards/" <> game_id)
   end
 
+  def resume_game(conn, %{"game_id" => game_id}) do
+    if GameCatalog.game_exists?(game_id) do
+      live_render(
+        conn,
+        BoardLive,
+        session: %{
+          "game_id" => game_id
+        }
+      )
+
+    else
+      redirect(conn, to: "/cards")
+    end
+
+
+  end
+
+  defp get_range(length) when length > 1, do: (1..length)
+  defp get_range(length), do: [1]
+
+  defp gen_random_url() do
+    length = 10
+    alphabets = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    lists = alphabets <> String.downcase(alphabets)
+            |> String.split("", trim: true)
+
+    get_range(length)
+    |> Enum.reduce([], fn (_, acc) -> [Enum.random(lists) | acc] end)
+    |> Enum.join("")
+  end
 end

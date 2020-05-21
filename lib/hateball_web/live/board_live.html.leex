@@ -7,6 +7,10 @@
         <button phx-click="draw_answer">
             Answer
         </button>
+
+        <button phx-click="add_point">
+            +1
+        </button>
     </div>
 
     <div class="public">
@@ -32,8 +36,16 @@
     </div>
 
     <div class="users">
-        <%= for name <- @players do %>
-            <div><%= name %></div>
+        <%= for {name, score}<- @player_scores do %>
+            <div >
+            <%= if name == @username do %>
+                <strong><%= name %></strong>
+            <% else %>
+                <em><%= name %></em>
+            <% end %>
+
+                <span><%= score %></span>
+            </div>
         <% end%>
     </div>
 </div>

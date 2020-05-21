@@ -1,14 +1,28 @@
 defmodule Hateball.Cards do
   use Agent
+  alias Hateball.GameCatalog
 
   def start_link(initial_data) do
-    IO.puts "---------- ** ---------  initial data #{inspect initial_data}"
-    Agent.start_link(fn -> initial_data end, name: __MODULE__)
+    Agent.start_link(initial_data)
   end
 
-  def draw_question() do
+  def get_question(game_id) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
+    Agent.get(agent_pid, fn data -> data.question_card end)
+  end
+
+  def get_answers(game_id, player_id) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
+    case Agent.get(agent_pid, fn data -> data.cards_in_hand[player_id] end) do
+      nil -> []
+      x -> x
+    end
+  end
+
+  def draw_question(game_id) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
     Agent.update(
-      __MODULE__,
+      agent_pid,
       fn data ->
         {top, rest} = draw_from_pile(data.question_pile)
 
@@ -19,18 +33,10 @@ defmodule Hateball.Cards do
     )
   end
 
-  def inspect_data() do
-    Agent.get(
-      __MODULE__,
-      fn data ->
-        IO.puts "-------*********--------- -> data: #{inspect data}"
-      end
-    )
-  end
-
-  def draw_answer(player_id) do
+  def draw_answer(game_id, player_id) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
     Agent.update(
-      __MODULE__,
+      agent_pid,
       fn data ->
         {top, rest} = draw_from_pile(data.answer_pile)
         if rest == "" do
@@ -54,9 +60,30 @@ defmodule Hateball.Cards do
     )
   end
 
-  def play_card(player_id, card_idx) do
+  def score_one(game_id, player_id) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
     Agent.update(
-      __MODULE__,
+      agent_pid,
+      fn data ->
+        players = if Map.has_key?(data.player_scores, player_id) do
+          data.player_scores
+        else
+          Map.put(data.player_scores, player_id, 0)
+        end
+
+        Map.put(
+          data,
+          :player_scores,
+          Map.put(players, player_id, players[player_id] + 1)
+        )
+      end
+    )
+  end
+
+  def play_card(game_id, player_id, card_idx) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
+    Agent.update(
+      agent_pid,
       fn data ->
         {card, remaining_cards_in_hand} = List.pop_at(
           data.cards_in_hand[player_id],
@@ -76,8 +103,15 @@ defmodule Hateball.Cards do
     )
   end
 
-  def get_played_cards(player_ids) do
-    cards = Agent.get(__MODULE__, fn data -> data.played_cards end)
+  def get_player_scores(game_id, player_ids) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
+    Agent.get(agent_pid, fn data -> data.player_scores end)
+    |> Enum.filter(fn {k, v} -> Enum.member?(player_ids, k) end)
+  end
+
+  def get_played_cards(game_id, player_ids) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
+    cards = Agent.get(agent_pid, fn data -> data.played_cards end)
             |> Enum.filter(fn {k, _} -> Enum.member?(player_ids, k) end)
             |> Enum.map(fn {k, {c, t}} -> {k, (if not t, do: "*****.", else: c)} end)
 
@@ -86,20 +120,10 @@ defmodule Hateball.Cards do
     cards
   end
 
-  def get_question() do
-    Agent.get(__MODULE__, fn data -> data.question_card end)
-  end
-
-  def get_answers(player_id) do
-    case Agent.get(__MODULE__, fn data -> data.cards_in_hand[player_id] end) do
-      nil -> []
-      x -> x
-    end
-  end
-
-  def turn_card(player_id) do
+  def turn_card(game_id, player_id) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
     Agent.update(
-      __MODULE__,
+      agent_pid,
       fn data ->
         {card, turned} = Map.get(data.played_cards, player_id)
 

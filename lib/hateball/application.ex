@@ -3,29 +3,21 @@ defmodule Hateball.Application do
   # for more information on OTP Applications
   @moduledoc false
 
-  alias Hateball.Cards.Constants
 
   use Application
 
   def start(_type, _args) do
     children = [
-      #            Hateball.Repo,
       HateballWeb.Telemetry,
       {Phoenix.PubSub, name: Hateball.PubSub},
       {
-        Hateball.Cards,
-        %{
-          question_card: "",
-          question_pile: Constants.get_questions,
-          answer_pile: Constants.get_answers,
-          cards_in_hand: %{},
-          played_cards: %{},
-        }
+        DynamicSupervisor,
+        name: Hateball.DynamicSupervisor,
+        strategy: :one_for_one
       },
+      {Hateball.GameCatalog, %{}},
       HateballWeb.Presence,
       HateballWeb.Endpoint,
-      # Start a worker by calling: Hateball.Worker.start_link(arg)
-      # {Hateball.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
