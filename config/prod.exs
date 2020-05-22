@@ -10,7 +10,8 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :hateball, HateballWeb.Endpoint,
-  url: [host: "ruizandr.es/hateball", port: 80],
+  static_url: [host: "ruizandr.es", path: "hateball/static", port: 80],
+  url: [host: "ruizandr.es", path: "hateball", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Do not print debug messages in production

@@ -1,0 +1,1 @@
+rm -rf deps/ _build/ assets/node_modules/ priv/static/

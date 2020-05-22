@@ -17,7 +17,7 @@ defmodule HateballWeb.Endpoint do
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   plug Plug.Static,
-    at: "/hateball",
+    at: "/static",
     from: :hateball,
     gzip: true,
     only: ~w(css fonts images js favicon.ico robots.txt)
