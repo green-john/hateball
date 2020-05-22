@@ -16,8 +16,8 @@ defmodule HateballWeb.Router do
 
   scope "/", HateballWeb do
     pipe_through :browser
-    get "/cards", CardsController, :start_game
-    get "/cards/:game_id", CardsController, :resume_game
+    get "/", CardsController, :start_game
+    get "/:game_id", CardsController, :resume_game
   end
 
   # Other scopes may use custom stacks.

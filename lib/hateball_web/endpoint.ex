@@ -10,10 +10,6 @@ defmodule HateballWeb.Endpoint do
     signing_salt: "oH/Ga1+d"
   ]
 
-  socket "/socket", HateballWeb.UserSocket,
-    websocket: true,
-    longpoll: false
-
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   plug Plug.Static,

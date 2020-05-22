@@ -17,15 +17,18 @@ import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let username = window.localStorage.getItem("username")
+let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+let username = window.localStorage.getItem("username");
+
 
 if (!username) {
     username = prompt("Username (15 chars max)").substring(0, 15);
     window.localStorage.setItem("username", username);
 }
 
-let liveSocket = new LiveSocket("/hateball/live", Socket, {
+const websocketUrl = process.env.NODE_ENV === "development" ? "/live" : "/hateball/live"
+
+let liveSocket = new LiveSocket(websocketUrl, Socket, {
     params: {
         _csrf_token: csrfToken,
         username: username
