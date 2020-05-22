@@ -33,7 +33,6 @@ defmodule Hateball.GameCatalog do
     if Map.has_key?(data, game_id) do
       data
     else
-      IO.puts "creating game #{inspect game_id}. data: #{inspect data}"
       {:ok, agent_pid} = GameSupervisor.create_game(game_id)
       Map.put(data, game_id, agent_pid)
     end
