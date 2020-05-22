@@ -24,8 +24,12 @@
         <div class="answers">
         <ol class="public-card-list">
         <%= for {player_id, card} <- @played_cards do %>
-            <li class="public-card" phx-click="turn_card" phx-value-player_id="<%= player_id %>"
-                ><%= card %></li>
+            <li>
+            <a href="#"
+                class="public-card"
+                phx-click="turn_card"
+                phx-value-player_id="<%= player_id %>"><%= card %></a>
+            </li>
         <% end %>
         </ol>
         </div>
@@ -34,8 +38,12 @@
     <div class="cards">
         <ol class="public-card-list">
         <%= for {card, idx} <- Enum.with_index(@answers) do %>
-            <li class="card" phx-click="play_answer" phx-value-idx="<%= idx %>"
-                ><%=card%></li>
+            <li>
+            <a href="#"
+                class="card"
+                phx-click="play_answer"
+                phx-value-idx="<%= idx %>"><%=card%></a>
+            </li>
         <% end %>
         </ol>
     </div>
