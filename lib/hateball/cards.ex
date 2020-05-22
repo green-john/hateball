@@ -59,12 +59,16 @@ defmodule Hateball.Cards do
           end
 
           player_cards = cards_in_hand[player_id]
-          Map.put(
-            data,
-            :cards_in_hand,
-            Map.put(cards_in_hand, player_id, [top | player_cards])
-          )
-          |> Map.put(:answer_pile, rest)
+          if length(player_cards) >= 10 do
+            data
+          else
+            Map.put(
+              data,
+              :cards_in_hand,
+              Map.put(cards_in_hand, player_id, [top | player_cards])
+            )
+            |> Map.put(:answer_pile, rest)
+          end
         end
       end
     )
@@ -153,7 +157,6 @@ defmodule Hateball.Cards do
     agent_pid = GameCatalog.get_game_agent_pid(game_id)
     Agent.get(agent_pid, fn data -> data.played_cards end)
     |> Enum.filter(fn {k, _} -> Enum.member?(player_ids, k) end)
-    |> Enum.map(fn {k, {c, t}} -> {k, display_answer(player_id, k, t, c)} end)
   end
 
   defp display_answer(my_player_id, player_id, shown, text) do

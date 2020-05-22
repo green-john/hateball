@@ -121,6 +121,7 @@ defmodule HateballWeb.BoardLive do
   end
 
   def handle_info({:reload_player_scores}, socket) do
+    %{:game_id => game_id, :username => username} = socket.assigns
     {
       :noreply,
       assign(
@@ -128,6 +129,11 @@ defmodule HateballWeb.BoardLive do
         player_scores: Cards.get_player_scores(
           socket.assigns.game_id,
           get_connected_users(socket.assigns.game_id)
+        ),
+        played_cards: Cards.get_played_cards(
+          game_id,
+          username,
+          get_connected_users(game_id)
         )
       )
     }

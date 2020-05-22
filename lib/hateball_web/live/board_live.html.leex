@@ -5,12 +5,12 @@
     </div>
 
     <div class="actions">
-        <button phx-click="draw_question">
+        <button class="question-btn" phx-click="draw_question">
             ?
         </button>
 
-        <button phx-click="draw_answer">
-            Answer Card
+        <button class="answer-btn" phx-click="draw_answer">
+            🂠
         </button>
 
         <button phx-click="add_point">
@@ -18,21 +18,29 @@
         </button>
     </div>
 
-    <div class="public">
-        <div><%= @question %> </div>
+    <div class="question"><%= @question %> </div>
 
-        <div class="answers">
-        <ol class="public-card-list">
-        <%= for {player_id, card} <- @played_cards do %>
-            <li>
-            <a href="#"
-                class="public-card"
-                phx-click="turn_card"
-                phx-value-player_id="<%= player_id %>"><%= card %></a>
-            </li>
+    <div class="public-answers">
+    <%= for {player_id, {card, turned}} <- @played_cards do %>
+        <%= if turned do %>
+        <a href="#"
+            class="card"
+            style="font-size: 1rem; display: block"
+            phx-click="turn_card"
+            phx-value-player_id="<%= player_id %>"><%= card %></a>
+        <% else %>
+        <a href="#"
+            class="turned-card"
+            phx-click="turn_card"
+            phx-value-player_id="<%= player_id %>">
+            <%= if player_id == @username do %>
+                <span style="color: #aaa">(<%= card %>)</span>
+            <% else %>
+                <span>.</span>
+           <% end %>
+            </a>
         <% end %>
-        </ol>
-        </div>
+    <% end %>
     </div>
 
     <div class="cards">
