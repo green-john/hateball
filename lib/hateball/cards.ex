@@ -8,7 +8,10 @@ defmodule Hateball.Cards do
 
   def get_question(game_id) do
     agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    Agent.get(agent_pid, fn data -> data.question_card end)
+    case agent_pid do
+      nil -> ""
+      _ -> Agent.get(agent_pid, fn data -> data.question_card end)
+    end
   end
 
   def get_answers(game_id, player_id) do
@@ -31,6 +34,13 @@ defmodule Hateball.Cards do
         |> Map.put(:played_cards, %{})
       end
     )
+  end
+
+  defp draw_from_pile(pile) do
+    case pile do
+      [top | rest] -> {top, rest}
+      _ -> {"", []}
+    end
   end
 
   def draw_answer(game_id, player_id) do
@@ -71,6 +81,8 @@ defmodule Hateball.Cards do
           Map.put(data.player_scores, player_id, 0)
         end
 
+        IO.puts "players #{inspect players}"
+
         Map.put(
           data,
           :player_scores,
@@ -90,6 +102,12 @@ defmodule Hateball.Cards do
           card_idx
         )
 
+        remaining_cards_in_hand = return_currently_played_card_to_hand(
+          player_id,
+          remaining_cards_in_hand,
+          data.played_cards
+        )
+
         data
         |> Map.put(
              :cards_in_hand,
@@ -103,21 +121,52 @@ defmodule Hateball.Cards do
     )
   end
 
-  def get_player_scores(game_id, player_ids) do
-    agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    Agent.get(agent_pid, fn data -> data.player_scores end)
-    |> Enum.filter(fn {k, v} -> Enum.member?(player_ids, k) end)
+  defp return_currently_played_card_to_hand(player_id, cards_in_hand, played_cards) do
+    if Map.has_key?(played_cards, player_id) do
+      {card, _turned} = played_cards[player_id]
+      [card | cards_in_hand]
+    else
+      cards_in_hand
+    end
   end
 
-  def get_played_cards(game_id, player_ids) do
+  def get_player_scores(game_id, player_ids) do
+    IO.puts "inputs #{inspect player_ids}"
+
     agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    cards = Agent.get(agent_pid, fn data -> data.played_cards end)
-            |> Enum.filter(fn {k, _} -> Enum.member?(player_ids, k) end)
-            |> Enum.map(fn {k, {c, t}} -> {k, (if not t, do: "*****.", else: c)} end)
+    player_scores = Agent.get(agent_pid, fn data -> data.player_scores end)
 
-    IO.puts "cards: #{inspect cards}"
+    IO.puts "player scores #{inspect player_scores}"
 
-    cards
+    res = player_ids
+          |> Enum.map(fn id -> {id, 0} end)
+          |> Enum.map(
+               fn {k, v} -> {k, Map.get(player_scores, k, 0)}
+               end
+             )
+
+    IO.puts "results #{inspect res}"
+    res
+  end
+
+  def get_played_cards(game_id, player_id, player_ids) do
+    agent_pid = GameCatalog.get_game_agent_pid(game_id)
+    Agent.get(agent_pid, fn data -> data.played_cards end)
+    |> Enum.filter(fn {k, _} -> Enum.member?(player_ids, k) end)
+    |> Enum.map(fn {k, {c, t}} -> {k, display_answer(player_id, k, t, c)} end)
+  end
+
+  defp display_answer(my_player_id, player_id, shown, text) do
+    if shown do
+      text
+    else
+      "??" <>
+      if my_player_id == player_id do
+        " (#{text})."
+      else
+        "."
+      end
+    end
   end
 
   def turn_card(game_id, player_id) do
@@ -134,12 +183,5 @@ defmodule Hateball.Cards do
         )
       end
     )
-  end
-
-  defp draw_from_pile(pile) do
-    case pile do
-      [top | rest] -> {top, rest}
-      _ -> {"", []}
-    end
   end
 end

@@ -7,14 +7,14 @@ defmodule HateballWeb.BoardLive do
   def mount(_params, %{"game_id" => game_id}, socket) do
     username =
       if connected?(socket) do
-        subscribe()
+        subscribe(game_id)
 
         connect_params = get_connect_params(socket)
         %{"username" => username} = connect_params
 
         Presence.track(
           self(),
-          "cards",
+          "cards:" <> game_id,
           username,
           %{}
         )
@@ -31,8 +31,11 @@ defmodule HateballWeb.BoardLive do
         username: username,
         question: Cards.get_question(game_id),
         answers: Cards.get_answers(game_id, username),
-        player_scores: get_connected_users(),
-        played_cards: Cards.get_played_cards(game_id, get_connected_users())
+        player_scores: Cards.get_player_scores(
+          game_id,
+          get_connected_users(game_id)
+        ),
+        played_cards: Cards.get_played_cards(game_id, username, get_connected_users(game_id))
       )
     }
   end
@@ -40,8 +43,8 @@ defmodule HateballWeb.BoardLive do
   def handle_event("draw_question", _, socket) do
     Cards.draw_question(socket.assigns.game_id)
 
-    broadcast({:reload_question})
-    broadcast({:reload_played_cards})
+    broadcast(socket.assigns.game_id, {:reload_question})
+    broadcast(socket.assigns.game_id, {:reload_played_cards})
     {:noreply, socket}
   end
 
@@ -62,7 +65,7 @@ defmodule HateballWeb.BoardLive do
     username = socket.assigns.username
     {number, ""} = Integer.parse(idx)
     Cards.play_card(socket.assigns.game_id, username, number)
-    broadcast({:reload_played_cards})
+    broadcast(socket.assigns.game_id, {:reload_played_cards})
     {
       :noreply,
       assign(
@@ -74,19 +77,20 @@ defmodule HateballWeb.BoardLive do
 
   def handle_event("turn_card", %{"player_id" => player_id}, socket) do
     Cards.turn_card(socket.assigns.game_id, player_id)
-    broadcast({:reload_played_cards})
+    broadcast(socket.assigns.game_id, {:reload_played_cards})
     {:noreply, socket}
   end
 
   def handle_event("add_point", _params, socket) do
-    Cards.score_one(socket.assigns.game_id, socket.assigns.username)
-    broadcast({:reload_player_scores})
+    %{:game_id => game_id, :username => username} = socket.assigns
+    IO.puts "game #{inspect game_id} username #{inspect username}"
+    Cards.score_one(game_id, username)
+    broadcast(game_id, {:reload_player_scores})
     {:noreply, socket}
   end
 
-  def handle_info(%{event: "presence_diff", payload: payload}, socket) do
-    users = get_connected_users()
-    broadcast({:reload_player_scores})
+  def handle_info(%{event: "presence_diff", payload: _payload}, socket) do
+    broadcast(socket.assigns.game_id, {:reload_player_scores})
     {:noreply, socket}
   end
 
@@ -101,30 +105,45 @@ defmodule HateballWeb.BoardLive do
   end
 
   def handle_info({:reload_played_cards}, socket) do
+    %{:game_id => game_id, :username => username} = socket.assigns
+
     {
       :noreply,
-      assign(socket, played_cards: Cards.get_played_cards(socket.assigns.game_id, get_connected_users()))
+      assign(
+        socket,
+        played_cards: Cards.get_played_cards(
+          game_id,
+          username,
+          get_connected_users(game_id)
+        )
+      )
     }
   end
 
   def handle_info({:reload_player_scores}, socket) do
     {
       :noreply,
-      assign(socket, player_scores: Cards.get_player_scores(socket.assigns.game_id, get_connected_users()))
+      assign(
+        socket,
+        player_scores: Cards.get_player_scores(
+          socket.assigns.game_id,
+          get_connected_users(socket.assigns.game_id)
+        )
+      )
     }
   end
 
-  defp get_connected_users() do
-    Presence.list("cards")
+  defp get_connected_users(game_id) do
+    Presence.list("cards:" <> game_id)
     |> Enum.map(fn ({user_id, _data}) -> user_id end)
   end
 
-  defp subscribe() do
-    Phoenix.PubSub.subscribe(Hateball.PubSub, "cards")
+  defp subscribe(game_id) do
+    Phoenix.PubSub.subscribe(Hateball.PubSub, "cards:" <> game_id)
   end
 
-  defp broadcast(event) do
-    Phoenix.PubSub.broadcast(Hateball.PubSub, "cards", event)
+  defp broadcast(game_id, event) do
+    Phoenix.PubSub.broadcast(Hateball.PubSub, "cards:" <> game_id, event)
   end
 
 end

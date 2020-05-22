@@ -6,11 +6,11 @@
 
     <div class="actions">
         <button phx-click="draw_question">
-            Question
+            ?
         </button>
 
         <button phx-click="draw_answer">
-            Answer
+            Answer Card
         </button>
 
         <button phx-click="add_point">
@@ -36,21 +36,17 @@
     </div>
 
     <div class="cards">
-        <ol class="public-card-list">
         <%= for {card, idx} <- Enum.with_index(@answers) do %>
-            <li>
             <a href="#"
                 class="card"
                 phx-click="play_answer"
                 phx-value-idx="<%= idx %>"><%=card%></a>
-            </li>
         <% end %>
-        </ol>
     </div>
 
     <div class="users">
         <%= for {name, score}<- @player_scores do %>
-            <div >
+            <div>
             <%= if name == @username do %>
                 <strong><%= name %></strong>
             <% else %>
