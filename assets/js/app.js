@@ -25,7 +25,7 @@ if (!username) {
     window.localStorage.setItem("username", username);
 }
 
-let liveSocket = new LiveSocket("/live", Socket, {
+let liveSocket = new LiveSocket("/hateball/live", Socket, {
     params: {
         _csrf_token: csrfToken,
         username: username
