@@ -30,6 +30,7 @@ defmodule HateballWeb.BoardLive do
         game_id: game_id,
         page_title: game_id,
         username: username,
+        is_game_master: Cards.is_game_master(game_id, username),
         question: Cards.get_question(game_id),
         answers: Cards.get_answers(game_id, username),
         player_scores: Cards.get_player_scores(
@@ -77,15 +78,21 @@ defmodule HateballWeb.BoardLive do
   end
 
   def handle_event("turn_card", %{"player_id" => player_id}, socket) do
-    Cards.turn_card(socket.assigns.game_id, player_id)
+    Cards.turn_card(socket.assigns.game_id, socket.assigns.username, player_id)
     broadcast(socket.assigns.game_id, {:reload_played_cards})
     {:noreply, socket}
   end
 
-  def handle_event("add_point", _params, socket) do
+  def handle_event("request_game_master", _params, socket) do
+    Cards.make_game_master(socket.assigns.game_id, socket.assigns.username)
+    broadcast(socket.assigns.game_id, {:reload_is_game_master})
+    {:noreply, socket}
+  end
+
+  def handle_event("add_point", %{"player_id" => player_id}, socket) do
     %{:game_id => game_id, :username => username} = socket.assigns
     IO.puts "game #{inspect game_id} username #{inspect username}"
-    Cards.score_one(game_id, username)
+    Cards.score_one(game_id, username, player_id)
     broadcast(game_id, {:reload_player_scores})
     {:noreply, socket}
   end
@@ -135,7 +142,19 @@ defmodule HateballWeb.BoardLive do
           game_id,
           username,
           get_connected_users(game_id)
-        )
+        ),
+        question: Cards.get_question(socket.assigns.game_id)
+      )
+    }
+  end
+
+  def handle_info({:reload_is_game_master}, socket) do
+    %{:game_id => game_id, :username => username} = socket.assigns
+    {
+      :noreply,
+      assign(
+        socket,
+        is_game_master: Cards.is_game_master(game_id, username),
       )
     }
   end

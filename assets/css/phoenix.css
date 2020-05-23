@@ -53,6 +53,10 @@ body {
     margin: 1rem 0;
 }
 
+.face-up-answer {
+    display: flex;
+}
+
 button.btn {
     cursor: pointer;
     background-color: #fcfcfc;
@@ -97,7 +101,9 @@ button.btn {
 .card {
     color: #111;
     background-color: #fcfcfc;
-    display: inline-block;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
     border: 1px solid black;
     margin: .3rem .2rem;
     padding: .3rem;
@@ -112,8 +118,9 @@ button.btn {
     color: #111;
     display: block;
     margin: .5rem 0;
-    padding: .5rem;
+    padding: .3rem;
     border: 1px solid black;
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.2);
     border-radius: 0.3rem;
     text-decoration: none;
 }

@@ -8,28 +8,32 @@ defmodule Hateball.Cards do
 
   def get_question(game_id) do
     game_id
-    |> get_from_data(fn data -> data.question_card end)
+    |> get_from_data(fn data -> data.question_card end, "")
   end
 
   def get_answers(game_id, player_id) do
-    agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    case Agent.get(agent_pid, fn data -> data.cards_in_hand[player_id] end) do
-      nil -> []
-      x -> x
+    cards_in_hand = fn data ->
+      case data.cards_in_hand[player_id] do
+        nil -> []
+        x -> x
+      end
     end
+
+    game_id
+    |> get_from_data(cards_in_hand, [])
   end
 
   def draw_question(game_id) do
     game_id
-    |> update_data(
-         fn data ->
-           {top, rest} = draw_from_pile(data.question_pile)
+    |> update_data(&pick_question_card/1)
+  end
 
-           Map.put(data, :question_card, top)
-           |> Map.put(:question_pile, rest)
-           |> Map.put(:played_cards, %{})
-         end
-       )
+  defp pick_question_card(data) do
+    {top, rest} = draw_from_pile(data.question_pile)
+
+    Map.put(data, :question_card, top)
+    |> Map.put(:question_pile, rest)
+    |> Map.put(:played_cards, %{})
   end
 
   def draw_answer(game_id, player_id) do
@@ -69,23 +73,26 @@ defmodule Hateball.Cards do
     end
   end
 
-  def score_one(game_id, player_id) do
+  def score_one(game_id, giving_player_id, receiver_player_id) do
     update_data(
       game_id,
       fn data ->
-        players = if Map.has_key?(data.player_scores, player_id) do
-          data.player_scores
+        if data.game_master != giving_player_id do
+          data
         else
-          Map.put(data.player_scores, player_id, 0)
+          player_scores = if Map.has_key?(data.player_scores, receiver_player_id) do
+            data.player_scores
+          else
+            Map.put(data.player_scores, receiver_player_id, 0)
+          end
+
+          Map.put(
+            data,
+            :player_scores,
+            Map.put(player_scores, receiver_player_id, player_scores[receiver_player_id] + 1)
+          )
+          |> pick_question_card
         end
-
-        IO.puts "players #{inspect players}"
-
-        Map.put(
-          data,
-          :player_scores,
-          Map.put(players, player_id, players[player_id] + 1)
-        )
       end
     )
   end
@@ -94,26 +101,30 @@ defmodule Hateball.Cards do
     game_id
     |> update_data(
          fn data ->
-           {card, remaining_cards_in_hand} = List.pop_at(
-             data.cards_in_hand[player_id],
-             card_idx
-           )
+           if data.game_master == player_id do
+             data
+           else
+             {card, remaining_cards_in_hand} = List.pop_at(
+               data.cards_in_hand[player_id],
+               card_idx
+             )
 
-           remaining_cards_in_hand = return_currently_played_card_to_hand(
-             player_id,
-             remaining_cards_in_hand,
-             data.played_cards
-           )
+             remaining_cards_in_hand = return_currently_played_card_to_hand(
+               player_id,
+               remaining_cards_in_hand,
+               data.played_cards
+             )
 
-           data
-           |> Map.put(
-                :cards_in_hand,
-                Map.put(data.cards_in_hand, player_id, remaining_cards_in_hand)
-              )
-           |> Map.put(
-                :played_cards,
-                Map.put(data.played_cards, player_id, {card, false})
-              )
+             data
+             |> Map.put(
+                  :cards_in_hand,
+                  Map.put(data.cards_in_hand, player_id, remaining_cards_in_hand)
+                )
+             |> Map.put(
+                  :played_cards,
+                  Map.put(data.played_cards, player_id, {card, false})
+                )
+           end
          end
        )
   end
@@ -165,17 +176,40 @@ defmodule Hateball.Cards do
     end
   end
 
-  def turn_card(game_id, player_id) do
+  def turn_card(game_id, user_playing, turned_card_player) do
     game_id
     |> update_data(
          fn data ->
-           {card, turned} = Map.get(data.played_cards, player_id)
+           if data.game_master == user_playing do
+             {card, turned} = Map.get(data.played_cards, turned_card_player)
 
-           Map.put(
-             data,
-             :played_cards,
-             Map.put(data.played_cards, player_id, {card, not turned})
-           )
+             Map.put(
+               data,
+               :played_cards,
+               Map.put(data.played_cards, turned_card_player, {card, not turned})
+             )
+           else
+             data
+           end
+         end
+       )
+  end
+
+  def is_game_master(game_id, player_id) do
+    game_id
+    |> get_from_data(
+         fn data ->
+           data.game_master == player_id
+         end,
+         false
+       )
+  end
+
+  def make_game_master(game_id, player_id) do
+    game_id
+    |> update_data(
+         fn data ->
+           Map.put(data, :game_master, player_id)
          end
        )
   end
@@ -188,9 +222,9 @@ defmodule Hateball.Cards do
     )
   end
 
-  defp get_from_data(game_id, func) do
+  defp get_from_data(game_id, func, empty_return) do
     case GameCatalog.get_game_agent_pid(game_id) do
-      nil -> ""
+      nil -> empty_return
       agent_pid -> Agent.get(agent_pid, func)
     end
   end

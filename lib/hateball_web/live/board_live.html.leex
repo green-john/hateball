@@ -8,33 +8,52 @@
             <span class="gg-trees"></span>
         </button>
 
-        <button class="btn" phx-click="add_point">
-            <span class="gg-flag-alt"></span>
-        </button>
+        <%= if @is_game_master do %>
+            <button class="btn dark" phx-click="request_game_master">
+                <span class="gg-user"></span>
+            </button>
+            <% else %>
+            <button class="btn" phx-click="request_game_master">
+                <span class="gg-user"></span>
+            </button>
+        <% end %>
+
     </div>
 
     <div class="question"><%= @question %> </div>
 
     <div class="public-answers">
     <%= for {player_id, {card, turned}} <- @played_cards do %>
-        <%= if turned do %>
-        <a href="#"
-            class="card"
-            style="font-size: 1rem; display: block"
-            phx-click="turn_card"
-            phx-value-player_id="<%= player_id %>"><%= card %></a>
-        <% else %>
-        <a href="#"
-            class="turned-card"
-            phx-click="turn_card"
-            phx-value-player_id="<%= player_id %>">
-            <%= if player_id == @username do %>
-                <span style="color: #aaa">(<%= card %>)</span>
+        <div class="public-answer">
+            <%= if turned do %>
+            <div class="face-up-answer">
+                <%= if @is_game_master do %>
+                <a href="#" class="card" phx-click="add_point"
+                    phx-value-player_id="<%= player_id %>"
+                >
+                    <span class="gg-smile-upside"></span>
+                </a>
+                <% end %>
+                <a href="#"
+                    class="card"
+                    phx-click="turn_card"
+                    phx-value-player_id="<%= player_id %>"><%= card %></a>
+            </div>
             <% else %>
-                <span>&nbsp;</span>
-           <% end %>
-            </a>
-        <% end %>
+            <div class="face-down-answer">
+                <a href="#"
+                    class="turned-card"
+                    phx-click="turn_card"
+                    phx-value-player_id="<%= player_id %>">
+                    <%= if player_id == @username do %>
+                        <span style="color: #aaa">(<%= card %>)</span>
+                    <% else %>
+                        <span>&nbsp;</span>
+                   <% end %>
+                </a>
+            </div>
+            <% end %>
+        </div>
     <% end %>
     </div>
 
@@ -50,6 +69,7 @@
     <div class="users">
         <%= for {name, score}<- @player_scores do %>
             <div>
+
             <%= if name == @username do %>
                 <strong><%= name %></strong>
             <% else %>
