@@ -53,7 +53,7 @@ defmodule HateballWeb.BoardLive do
   def handle_event("draw_answer", _, socket) do
     username = socket.assigns.username
     Cards.draw_answer(socket.assigns.game_id, username)
-
+    broadcast(socket.assigns.game_id, {:reload_is_game_master})
     {
       :noreply,
       assign(

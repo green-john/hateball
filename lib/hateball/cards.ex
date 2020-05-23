@@ -43,6 +43,7 @@ defmodule Hateball.Cards do
            cards_in_hand = if Map.has_key?(data.cards_in_hand, player_id) do
              data.cards_in_hand
            else
+
              Map.put(data.cards_in_hand, player_id, [])
            end
 
@@ -58,9 +59,18 @@ defmodule Hateball.Cards do
                Map.put(cards_in_hand, player_id, player_cards ++ picked_cards)
              )
              |> Map.put(:answer_pile, rest)
+             |> assign_game_master_if_missing(player_id)
            end
          end
        )
+  end
+
+  defp assign_game_master_if_missing(data, player_id) do
+    if data.game_master == "" do
+      Map.put(data, :game_master, player_id)
+    else
+      data
+    end
   end
 
   defp draw_from_pile(pile, n \\ 1) do
