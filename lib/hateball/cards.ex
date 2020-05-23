@@ -7,11 +7,8 @@ defmodule Hateball.Cards do
   end
 
   def get_question(game_id) do
-    agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    case agent_pid do
-      nil -> ""
-      _ -> Agent.get(agent_pid, fn data -> data.question_card end)
-    end
+    game_id
+    |> get_from_data(fn data -> data.question_card end)
   end
 
   def get_answers(game_id, player_id) do
@@ -23,17 +20,46 @@ defmodule Hateball.Cards do
   end
 
   def draw_question(game_id) do
-    agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    Agent.update(
-      agent_pid,
-      fn data ->
-        {top, rest} = draw_from_pile(data.question_pile)
+    game_id
+    |> update_data(
+         fn data ->
+           {top, rest} = draw_from_pile(data.question_pile)
 
-        Map.put(data, :question_card, top)
-        |> Map.put(:question_pile, rest)
-        |> Map.put(:played_cards, %{})
-      end
-    )
+           Map.put(data, :question_card, top)
+           |> Map.put(:question_pile, rest)
+           |> Map.put(:played_cards, %{})
+         end
+       )
+  end
+
+  def draw_answer(game_id, player_id) do
+    game_id
+    |> update_data(
+         fn data ->
+           {top, rest} = draw_from_pile(data.answer_pile)
+           if rest == "" do
+             data
+           else
+             cards_in_hand = if Map.has_key?(data.cards_in_hand, player_id) do
+               data.cards_in_hand
+             else
+               Map.put(data.cards_in_hand, player_id, [])
+             end
+
+             player_cards = cards_in_hand[player_id]
+             if length(player_cards) >= 10 do
+               data
+             else
+               Map.put(
+                 data,
+                 :cards_in_hand,
+                 Map.put(cards_in_hand, player_id, [top | player_cards])
+               )
+               |> Map.put(:answer_pile, rest)
+             end
+           end
+         end
+       )
   end
 
   defp draw_from_pile(pile) do
@@ -43,41 +69,9 @@ defmodule Hateball.Cards do
     end
   end
 
-  def draw_answer(game_id, player_id) do
-    agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    Agent.update(
-      agent_pid,
-      fn data ->
-        {top, rest} = draw_from_pile(data.answer_pile)
-        if rest == "" do
-          data
-        else
-          cards_in_hand = if Map.has_key?(data.cards_in_hand, player_id) do
-            data.cards_in_hand
-          else
-            Map.put(data.cards_in_hand, player_id, [])
-          end
-
-          player_cards = cards_in_hand[player_id]
-          if length(player_cards) >= 10 do
-            data
-          else
-            Map.put(
-              data,
-              :cards_in_hand,
-              Map.put(cards_in_hand, player_id, [top | player_cards])
-            )
-            |> Map.put(:answer_pile, rest)
-          end
-        end
-      end
-    )
-  end
-
   def score_one(game_id, player_id) do
-    agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    Agent.update(
-      agent_pid,
+    update_data(
+      game_id,
       fn data ->
         players = if Map.has_key?(data.player_scores, player_id) do
           data.player_scores
@@ -97,32 +91,31 @@ defmodule Hateball.Cards do
   end
 
   def play_card(game_id, player_id, card_idx) do
-    agent_pid = GameCatalog.get_game_agent_pid(game_id)
-    Agent.update(
-      agent_pid,
-      fn data ->
-        {card, remaining_cards_in_hand} = List.pop_at(
-          data.cards_in_hand[player_id],
-          card_idx
-        )
-
-        remaining_cards_in_hand = return_currently_played_card_to_hand(
-          player_id,
-          remaining_cards_in_hand,
-          data.played_cards
-        )
-
-        data
-        |> Map.put(
-             :cards_in_hand,
-             Map.put(data.cards_in_hand, player_id, remaining_cards_in_hand)
+    game_id
+    |> update_data(
+         fn data ->
+           {card, remaining_cards_in_hand} = List.pop_at(
+             data.cards_in_hand[player_id],
+             card_idx
            )
-        |> Map.put(
-             :played_cards,
-             Map.put(data.played_cards, player_id, {card, false})
+
+           remaining_cards_in_hand = return_currently_played_card_to_hand(
+             player_id,
+             remaining_cards_in_hand,
+             data.played_cards
            )
-      end
-    )
+
+           data
+           |> Map.put(
+                :cards_in_hand,
+                Map.put(data.cards_in_hand, player_id, remaining_cards_in_hand)
+              )
+           |> Map.put(
+                :played_cards,
+                Map.put(data.played_cards, player_id, {card, false})
+              )
+         end
+       )
   end
 
   defp return_currently_played_card_to_hand(player_id, cards_in_hand, played_cards) do
@@ -173,18 +166,32 @@ defmodule Hateball.Cards do
   end
 
   def turn_card(game_id, player_id) do
+    game_id
+    |> update_data(
+         fn data ->
+           {card, turned} = Map.get(data.played_cards, player_id)
+
+           Map.put(
+             data,
+             :played_cards,
+             Map.put(data.played_cards, player_id, {card, not turned})
+           )
+         end
+       )
+  end
+
+  defp update_data(game_id, func) do
     agent_pid = GameCatalog.get_game_agent_pid(game_id)
     Agent.update(
       agent_pid,
-      fn data ->
-        {card, turned} = Map.get(data.played_cards, player_id)
-
-        Map.put(
-          data,
-          :played_cards,
-          Map.put(data.played_cards, player_id, {card, not turned})
-        )
-      end
+      func
     )
+  end
+
+  defp get_from_data(game_id, func) do
+    case GameCatalog.get_game_agent_pid(game_id) do
+      nil -> ""
+      agent_pid -> Agent.get(agent_pid, func)
+    end
   end
 end

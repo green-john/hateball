@@ -58,12 +58,13 @@ button.btn {
     background-color: #fcfcfc;
     color: #111;
     border-radius: .3rem;
-    border: 1px solid #111;
+    border: 1px solid #555;
     display: flex;
     margin: 0 .4rem;
     align-items: center;
     justify-content: center;
     height: 2.5rem;
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.15);
 }
 
 .actions > button.btn {
@@ -103,7 +104,7 @@ button.btn {
     border-radius: 0.3rem;
     text-decoration: none;
     font-size: .9rem;
-    box-shadow: 3px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.2);
 }
 
 .turned-card {
