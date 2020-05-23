@@ -1,13 +1,5 @@
 <div class="cards-container">
     <div class="actions">
-        <button class="btn dark" phx-click="draw_question">
-            <span class="gg-tree"></span>
-        </button>
-
-        <button class="btn" phx-click="draw_answer">
-            <span class="gg-trees"></span>
-        </button>
-
         <%= if @is_game_master do %>
             <button class="btn dark" phx-click="request_game_master">
                 <span class="gg-user"></span>
@@ -18,6 +10,15 @@
             </button>
         <% end %>
 
+        <button class="btn" phx-click="draw_answer">
+            <span class="gg-trees"></span>
+        </button>
+
+        <%= if @is_game_master do %>
+        <button class="btn dark" phx-click="draw_question">
+            <span class="gg-tree"></span>
+        </button>
+        <% end %>
     </div>
 
     <div class="question"><%= @question %> </div>

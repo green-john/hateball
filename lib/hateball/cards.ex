@@ -40,36 +40,37 @@ defmodule Hateball.Cards do
     game_id
     |> update_data(
          fn data ->
-           {top, rest} = draw_from_pile(data.answer_pile)
-           if rest == "" do
+           cards_in_hand = if Map.has_key?(data.cards_in_hand, player_id) do
+             data.cards_in_hand
+           else
+             Map.put(data.cards_in_hand, player_id, [])
+           end
+
+           player_cards = cards_in_hand[player_id]
+           {picked_cards, rest} = draw_from_pile(data.answer_pile, 10 - length(player_cards))
+
+           if rest == [] do
              data
            else
-             cards_in_hand = if Map.has_key?(data.cards_in_hand, player_id) do
-               data.cards_in_hand
-             else
-               Map.put(data.cards_in_hand, player_id, [])
-             end
-
-             player_cards = cards_in_hand[player_id]
-             if length(player_cards) >= 10 do
-               data
-             else
-               Map.put(
-                 data,
-                 :cards_in_hand,
-                 Map.put(cards_in_hand, player_id, [top | player_cards])
-               )
-               |> Map.put(:answer_pile, rest)
-             end
+             Map.put(
+               data,
+               :cards_in_hand,
+               Map.put(cards_in_hand, player_id, player_cards ++ picked_cards)
+             )
+             |> Map.put(:answer_pile, rest)
            end
          end
        )
   end
 
-  defp draw_from_pile(pile) do
-    case pile do
-      [top | rest] -> {top, rest}
-      _ -> {"", []}
+  defp draw_from_pile(pile, n \\ 1) do
+    case {pile, n} do
+      {p, 0} -> {[], p}
+      {[top | rest], r} ->
+        {picked, remaining} = draw_from_pile(rest, r - 1)
+        {[top | picked], remaining}
+
+      {[], r} -> {[], []}
     end
   end
 
