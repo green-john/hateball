@@ -127,6 +127,21 @@ a, a:visited {
     color: black;
 }
 
+.user-text {
+    text-align: left;
+}
+
+.score-text {
+    padding-left: 1rem;
+    text-align: right;
+}
+
+.user-actions button.btn {
+    width: 2.5rem;
+    padding: .4rem;
+    margin: .3rem;
+}
+
 @media only screen and (min-width: 768px) {
     body {
         margin: 5rem auto;

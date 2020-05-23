@@ -83,8 +83,8 @@ defmodule HateballWeb.BoardLive do
     {:noreply, socket}
   end
 
-  def handle_event("request_game_master", _params, socket) do
-    Cards.make_game_master(socket.assigns.game_id, socket.assigns.username)
+  def handle_event("give_game_master", %{"player_id" => player_id}, socket) do
+    Cards.make_game_master(socket.assigns.game_id, socket.assigns.username, player_id)
     broadcast(socket.assigns.game_id, {:reload_is_game_master})
     {:noreply, socket}
   end

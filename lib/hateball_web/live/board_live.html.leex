@@ -1,23 +1,13 @@
 <div class="cards-container">
     <div class="actions">
-        <%= if @is_game_master do %>
-            <button class="btn dark" phx-click="request_game_master">
-                <span class="gg-user"></span>
-            </button>
-            <% else %>
-            <button class="btn" phx-click="request_game_master">
-                <span class="gg-user"></span>
-            </button>
-        <% end %>
-
         <button class="btn" phx-click="draw_answer">
-            <span class="gg-trees"></span>
+            <span class="gg-menu"></span>
         </button>
 
         <%= if @is_game_master do %>
-        <button class="btn dark" phx-click="draw_question">
-            <span class="gg-tree"></span>
-        </button>
+            <button class="btn dark" phx-click="draw_question">
+                <span class="gg-search"></span>
+            </button>
         <% end %>
     </div>
 
@@ -32,7 +22,7 @@
                 <a href="#" class="card" phx-click="add_point"
                     phx-value-player_id="<%= player_id %>"
                 >
-                    <span class="gg-smile-upside"></span>
+                    <span class="gg-awards"></span>
                 </a>
                 <% end %>
                 <a href="#"
@@ -68,18 +58,33 @@
     </div>
 
     <div class="users">
-        <%= for {name, score}<- @player_scores do %>
-            <div>
+        <table>
+            <tbody>
+                <%= for {name, score}<- @player_scores do %>
+                <tr>
+                    <%= if @is_game_master do %>
+                        <td class="user-actions">
+                            <%= if name == @username do %>
+                                <button class="btn dark">
+                                    <span class="gg-ghost-character"></span>
+                                </button>
+                            <% else %>
+                                <button class="btn"
+                                    phx-click="give_game_master"
+                                    phx-value-player_id="<%= name %>">
+                                    <span class="gg-ghost-character"></span>
+                                </button>
+                            <% end %>
+                        </td>
+                    <% end %>
 
-            <%= if name == @username do %>
-                <strong><%= name %></strong>
-            <% else %>
-                <em><%= name %></em>
-            <% end %>
+                    <td class="user-text"><%= name %></td>
+                    <td class="score-text"><%= score %></td>
+                </tr>
+                <% end%>
+            </tbody>
 
-                <span><%= score %></span>
-            </div>
-        <% end%>
+            </table>
     </div>
 
     <div class="title">

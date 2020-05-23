@@ -206,11 +206,15 @@ defmodule Hateball.Cards do
        )
   end
 
-  def make_game_master(game_id, player_id) do
+  def make_game_master(game_id, requester_id, new_master_id) do
     game_id
     |> update_data(
          fn data ->
-           Map.put(data, :game_master, player_id)
+           if data.game_master == requester_id do
+             Map.put(data, :game_master, new_master_id)
+           else
+             data
+           end
          end
        )
   end
