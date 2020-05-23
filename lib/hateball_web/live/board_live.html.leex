@@ -1,20 +1,15 @@
 <div class="cards-container">
-
-    <div class="title">
-        <h1>ID: <em><%= @game_id %></em></h1>
-    </div>
-
     <div class="actions">
-        <button class="question-btn" phx-click="draw_question">
-            ?
+        <button class="btn dark" phx-click="draw_question">
+            <span class="gg-tree"></span>
         </button>
 
-        <button class="answer-btn" phx-click="draw_answer">
-            🂠
+        <button class="btn" phx-click="draw_answer">
+            <span class="gg-trees"></span>
         </button>
 
-        <button phx-click="add_point">
-            +1
+        <button class="btn" phx-click="add_point">
+            <span class="gg-flag-alt"></span>
         </button>
     </div>
 
@@ -36,7 +31,7 @@
             <%= if player_id == @username do %>
                 <span style="color: #aaa">(<%= card %>)</span>
             <% else %>
-                <span>.</span>
+                <span>&nbsp;</span>
            <% end %>
             </a>
         <% end %>
@@ -64,6 +59,10 @@
                 <span><%= score %></span>
             </div>
         <% end%>
+    </div>
+
+    <div class="title">
+        <span>Game ID: <em><%= @game_id %></em></span>
     </div>
 </div>
 

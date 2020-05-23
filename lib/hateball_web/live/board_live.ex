@@ -28,6 +28,7 @@ defmodule HateballWeb.BoardLive do
       assign(
         socket,
         game_id: game_id,
+        page_title: game_id,
         username: username,
         question: Cards.get_question(game_id),
         answers: Cards.get_answers(game_id, username),

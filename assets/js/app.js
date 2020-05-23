@@ -20,7 +20,6 @@ import {LiveSocket} from "phoenix_live_view"
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 let username = window.localStorage.getItem("username");
 
-
 if (!username) {
     username = prompt("Username (15 chars max)").substring(0, 15);
     window.localStorage.setItem("username", username);
