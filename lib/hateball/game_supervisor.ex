@@ -15,10 +15,10 @@ defmodule Hateball.GameSupervisor do
       question_card: "",
 
       # Pile of question cards
-      question_pile: Constants.get_questions,
+      question_pile: Enum.shuffle(Constants.get_questions),
 
       # Pile of answer cards
-      answer_pile: Constants.get_answers,
+      answer_pile: Enum.shuffle(Constants.get_answers),
 
       # Cards each player has in hand
       cards_in_hand: %{},

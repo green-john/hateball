@@ -17,10 +17,11 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   * Forum: https://elixirforum.com/c/phoenix-forum
   * Source: https://github.com/phoenixframework/phoenix
   
+[Cards against humanity](https://en.wikipedia.org/wiki/Cards_Against_Humanity)
   
 ## Deployment
 
-To deploy run:
+To deploy run (on the machine where it's being deployed):
 
 ```bash
 ./scripts/clean.sh

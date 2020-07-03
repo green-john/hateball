@@ -229,6 +229,31 @@ defmodule Hateball.Cards do
        )
   end
 
+  def replace_player_card(game_id, player_id, card_idx) do
+    game_id
+    |> update_data(
+         fn data ->
+           cards_in_hand = data.cards_in_hand[player_id]
+           first_half = Enum.take(cards_in_hand, card_idx)
+           second_half = Enum.drop(cards_in_hand, card_idx + 1)
+
+           {replacement_card, rest_pile} = draw_from_pile(data.answer_pile, 1)
+
+           new_hand = first_half ++ [replacement_card] ++ second_half
+
+           data
+           |> Map.put(
+                :cards_in_hand,
+                Map.put(data.cards_in_hand, player_id, new_hand)
+              )
+           |> Map.put(
+                :answer_pile,
+                rest_pile
+              )
+         end
+       )
+  end
+
   defp update_data(game_id, func) do
     agent_pid = GameCatalog.get_game_agent_pid(game_id)
     Agent.update(

@@ -1,4 +1,11 @@
 <div class="cards-container">
+
+    <div class="winner">
+        <%= if @winner do %>
+            <%= @winner %>
+        <% end %>
+    </div>
+
     <div class="actions">
         <button class="btn" phx-click="draw_answer">
             <span class="gg-menu"></span>
@@ -19,14 +26,14 @@
             <%= if turned do %>
             <div class="face-up-answer">
                 <%= if @is_game_master do %>
-                <a href="#" class="card" phx-click="add_point"
+                <a href="#" class="turned-card mr-3" phx-click="add_point"
                     phx-value-player_id="<%= player_id %>"
                 >
                     <span class="gg-awards"></span>
                 </a>
                 <% end %>
                 <a href="#"
-                    class="card"
+                    class="turned-card"
                     phx-click="turn_card"
                     phx-value-player_id="<%= player_id %>"><%= card %></a>
             </div>
@@ -50,10 +57,20 @@
 
     <div class="cards">
         <%= for {card, idx} <- Enum.with_index(@answers) do %>
-            <a href="#"
-                class="card"
-                phx-click="play_answer"
-                phx-value-idx="<%= idx %>"><%=card%></a>
+            <div class="card">
+                <a href="#"
+                    class="card-link"
+                    phx-click="play_answer"
+                    phx-value-idx="<%= idx %>"><%=card%></a>
+                <a
+                    href="#"
+                    class="card-refresh"
+                    style="display: block"
+                    phx-click="replace_card"
+                    phx-value-idx="<%= idx %>">
+                        <span class="gg-swap"></span>
+                 </a>
+            </div>
         <% end %>
     </div>
 

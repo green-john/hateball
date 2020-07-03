@@ -37,7 +37,8 @@ defmodule HateballWeb.BoardLive do
           game_id,
           get_connected_users(game_id)
         ),
-        played_cards: Cards.get_played_cards(game_id, username, get_connected_users(game_id))
+        played_cards: Cards.get_played_cards(game_id, username, get_connected_users(game_id)),
+        winner: nil
       )
     }
   end
@@ -94,7 +95,15 @@ defmodule HateballWeb.BoardLive do
     IO.puts "game #{inspect game_id} username #{inspect username}"
     Cards.score_one(game_id, username, player_id)
     broadcast(game_id, {:reload_player_scores})
+    broadcast(game_id, {:set_winner, player_id})
     {:noreply, socket}
+  end
+
+  def handle_event("replace_card", %{"idx" => card_idx}, socket) do
+    %{:game_id => game_id, :username => username} = socket.assigns
+    {idx_int, _} = Integer.parse(card_idx)
+    Cards.replace_player_card(game_id, username, idx_int)
+    {:noreply, assign(socket, answers: Cards.get_answers(game_id, username))}
   end
 
   def handle_info(%{event: "presence_diff", payload: _payload}, socket) do
@@ -156,6 +165,21 @@ defmodule HateballWeb.BoardLive do
         socket,
         is_game_master: Cards.is_game_master(game_id, username),
       )
+    }
+  end
+
+  def handle_info({:set_winner, winner}, socket) do
+    Process.send_after(self(), :clear_winner, 2500)
+    {
+      :noreply,
+      assign(socket, winner: "#{winner} 🏆!")
+    }
+  end
+
+  def handle_info(:clear_winner, socket) do
+    {
+      :noreply,
+      assign(socket, winner: nil)
     }
   end
 
