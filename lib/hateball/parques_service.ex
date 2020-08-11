@@ -52,21 +52,30 @@ defmodule Hateball.ParquesService do
 
   def play_turn(world, {piece, amount_to_move}) do
     {current_player, _state} = world.game_state
-    {a, b} = world.dices
-    if amount_to_move != a and amount_to_move != b do
+    if not can_move(world.dices, amount_to_move) do
       {:error, bad_movement_error(world.dices)}
     else
-      {_, new_pos} = Map.get_and_update(
+      {_, new_positions} = Map.get_and_update(
         world.positions,
         {current_player, piece},
         fn curr_pos -> {curr_pos, curr_pos + amount_to_move} end
       )
+
+      new_dices = use_dices(world.dices, amount_to_move)
+      new_game_state = case new_dices do
+        {_a} -> {current_player, :move_second}
+        # TODO replace this hardcoded player amount
+        {} -> {rem(current_player + 1, 4), :to_play}
+      end
+
       {
         :ok,
-        world
-        |> Map.put(:dices, leave_other(world.dices, amount_to_move))
-        |> Map.put(:game_state, {current_player, :move_second})
-        |> Map.put(:positions, new_pos)
+        %{
+          world |
+          dices: new_dices,
+          game_state: new_game_state,
+          positions: new_positions
+        }
       }
     end
   end
@@ -75,14 +84,25 @@ defmodule Hateball.ParquesService do
     {current_player, _state} = world.game_state
     {
       :ok,
-      world
-      |> Map.put(:game_state, {current_player, :move_first})
-      |> Map.put(:dices, {roll_die.(), roll_die.()})
+      %{
+        world |
+        game_state: {current_player, :move_first},
+        dices: {roll_die.(), roll_die.()}
+      }
     }
   end
 
-  defp leave_other({a, b}, element) do
-    if a == element, do: {b}, else: {a}
+  defp use_dices({_a}, element), do: {}
+  defp use_dices({a, b}, element) do
+    cond  do
+      a == element -> {b}
+      b == element -> {a}
+      a + b == element -> {}
+    end
   end
 
+  defp can_move({a}, to_move), do: to_move == a
+  defp can_move({a, b}, to_move) do
+    to_move == a or to_move == b or to_move == (a + b)
+  end
 end

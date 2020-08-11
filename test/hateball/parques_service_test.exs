@@ -61,7 +61,7 @@ defmodule Hateball.ParquesServiceTest do
     assert reason == "solo puede mover 3 o 3 espacios"
   end
 
-  test "player can move a piece" do
+  test "player plays once move a piece" do
     {:ok, world} = create_initial_world(true)
 
     {:ok, world} = ParquesService.play_turn(world, {1, 3})
@@ -71,14 +71,24 @@ defmodule Hateball.ParquesServiceTest do
     assert world.positions[{1, 1}] == 8
   end
 
-  test "first player play all dices at once" do
+  test "player plays twice move two pieces" do
     {:ok, world} = create_initial_world(true)
 
-    {:ok, world} = ParquesService.play_turn(world, {1, 6})
+    {:ok, world} = ParquesService.play_turn(world, {1, 3})
+    {:ok, world} = ParquesService.play_turn(world, {1, 3})
 
     assert world.dices == {}
     assert world.game_state == {2, :to_play}
     assert world.positions[{1, 1}] == 11
+  end
+
+  test "first player play all dices at once" do
+    {:ok, world} = create_initial_world(true)
+    {:ok, world} = ParquesService.play_turn(world, {1, 6})
+
+    assert world.dices == {}
+    assert world.positions[{1, 1}] == 11
+    assert world.game_state == {2, :to_play}
   end
 
   defp create_initial_world(initialize \\ false) do
