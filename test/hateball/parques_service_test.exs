@@ -21,24 +21,32 @@ defmodule Hateball.ParquesServiceTest do
     assert Enum.all?(world.pieces_left, &(Kernel.elem(&1, 1) == 4))
   end
 
-  test "first player comes out of jail" do
+  test "only one player comes out of jail" do
     world = create_initial_world()
             |> ParquesService.out_of_jail(1)
 
     ones_pieces = Enum.filter(
       world.positions,
-      fn {key, _val} ->
-        Kernel.elem(key, 0) == 1
+      fn {{player, _}, _} ->
+        player == 1
       end
     )
 
-    assert length(ones_pieces) == 4
     assert Enum.all?(
              ones_pieces,
-             fn {_key, pos} ->
-               pos == ParquesService.salida()
+             fn {_, pos} ->
+               pos == {1, ParquesService.salida()}
              end
            )
+
+    rest = Enum.filter(
+      world.positions,
+      fn {{player, _}, _} ->
+        player != 1
+      end
+    )
+
+    assert Enum.all?(rest, fn {_key, pos} -> pos == :jail end)
   end
 
   test "first player can roll" do
@@ -68,7 +76,7 @@ defmodule Hateball.ParquesServiceTest do
 
     assert world.dices == {3}
     assert world.game_state == {1, :move_second}
-    assert world.positions[{1, 1}] == 8
+    assert world.positions[{1, 1}] == {1, 8}
   end
 
   test "player plays twice move two pieces" do
@@ -79,7 +87,7 @@ defmodule Hateball.ParquesServiceTest do
 
     assert world.dices == {}
     assert world.game_state == {2, :to_play}
-    assert world.positions[{1, 1}] == 11
+    assert world.positions[{1, 1}] == {1, 11}
   end
 
   test "first player play all dices at once" do
@@ -87,8 +95,20 @@ defmodule Hateball.ParquesServiceTest do
     {:ok, world} = ParquesService.play_turn(world, {1, 6})
 
     assert world.dices == {}
-    assert world.positions[{1, 1}] == 11
+    assert world.positions[{1, 1}] == {1, 11}
     assert world.game_state == {2, :to_play}
+  end
+
+  test "second player rolls the dice" do
+    {:ok, world} = create_initial_world(true)
+    {:ok, world} = ParquesService.play_turn(world, {1, 6})
+    world = ParquesService.out_of_jail(world, 2)
+    {:ok, world} = ParquesService.play_turn(world, fn -> 4 end)
+    {:ok, world} = ParquesService.play_turn(world, {1, 8})
+
+    assert world.dices == {}
+    assert world.positions[{2, 1}] == {2, 13}
+    assert world.game_state == {3, :to_play}
   end
 
   defp create_initial_world(initialize \\ false) do

@@ -14,7 +14,7 @@ defmodule Hateball.ParquesService do
     %ParquesWorld{
       name: name,
       pieces_left: (1..player_count)
-                   |> Enum.zip(List.duplicate(4, player_count))
+                   |> Enum.zip(List.duplicate(piece_count, player_count))
                    |> Map.new(),
       dices: {},
       positions: Map.new(create_positions(player_count, piece_count)),
@@ -33,7 +33,7 @@ defmodule Hateball.ParquesService do
     new_pos = calculate_new_positions(
       game.positions,
       player_id,
-      fn {key, _pos} -> {key, salida()} end
+      fn {key, _} -> {key, {player_id, salida()}} end
     )
 
     put_in game.positions,
@@ -46,7 +46,7 @@ defmodule Hateball.ParquesService do
 
   defp calculate_new_positions(old_positions, player_id, new_position_fun) do
     belongs_to_player? = fn {{p_id, _}, _} -> p_id == player_id end
-    (for pos <- old_positions, belongs_to_player?, do: new_position_fun.(pos))
+    (for pos <- old_positions, belongs_to_player?.(pos), do: new_position_fun.(pos))
     |> Map.new()
   end
 
@@ -55,17 +55,19 @@ defmodule Hateball.ParquesService do
     if not can_move(world.dices, amount_to_move) do
       {:error, bad_movement_error(world.dices)}
     else
-      {_, new_positions} = Map.get_and_update(
+      pos_key = {current_player, piece}
+      %{^pos_key => {color, curr_pos}} = world.positions
+      new_positions = Map.put(
         world.positions,
         {current_player, piece},
-        fn curr_pos -> {curr_pos, curr_pos + amount_to_move} end
+        {color, curr_pos + amount_to_move}
       )
 
       new_dices = use_dices(world.dices, amount_to_move)
+      player_count = Kernel.map_size(world.pieces_left)
       new_game_state = case new_dices do
-        {_a} -> {current_player, :move_second}
-        # TODO replace this hardcoded player amount
-        {} -> {rem(current_player + 1, 4), :to_play}
+        {_} -> {current_player, :move_second}
+        {} -> {rem(current_player + 1, player_count), :to_play}
       end
 
       {
@@ -92,7 +94,7 @@ defmodule Hateball.ParquesService do
     }
   end
 
-  defp use_dices({_a}, element), do: {}
+  defp use_dices({_}, _), do: {}
   defp use_dices({a, b}, element) do
     cond  do
       a == element -> {b}
