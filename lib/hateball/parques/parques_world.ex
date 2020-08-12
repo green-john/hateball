@@ -6,6 +6,7 @@ defmodule Hateball.ParquesWorld do
     :dices,
     :positions,
     :game_state,
+    :second_lap,
   ]
 
 end
