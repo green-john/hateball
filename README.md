@@ -1,23 +1,21 @@
 # Hateball
 
-To start your Phoenix server:
+Collection of games. There's a card game. There's a table top game.
 
-  * Setup the project with `mix setup`
-  * Start Phoenix endpoint with `mix phx.server`
+[Cards against humanity](https://en.wikipedia.org/wiki/Cards_Against_Humanity)
+[Parqués](https://en.wikipedia.org/wiki/Parqu%C3%A9s)
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+## Running
+
+```
+mix setup
+mix phx.server
+```
+
+Go to [`localhost:4000`](http://localhost:4000)
 
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
 
-## Learn more
-
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
-  
-[Cards against humanity](https://en.wikipedia.org/wiki/Cards_Against_Humanity)
   
 ## Deployment
 

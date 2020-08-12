@@ -111,6 +111,24 @@ defmodule Hateball.ParquesServiceTest do
     assert world.game_state == {3, :to_play}
   end
 
+  test "player can move out of quadrant" do
+    {:ok, world} = create_initial_world()
+                   |> ParquesService.out_of_jail(1)
+                   |> ParquesService.play_turn(fn -> 7 end)
+
+    {:ok, world} = ParquesService.play_turn(game, {1, 14})
+
+    assert world.dices = {}
+    assert positions[{1, 1}] = {2, 2}
+  end
+
+  # Move out of own quadrant
+  # Move from last to first quadrant
+  # Jail dynamics
+  # Eating other pieces
+  # Going into heaven
+  # Winning
+
   defp create_initial_world(initialize \\ false) do
     world =
       ParquesService.create_world(
