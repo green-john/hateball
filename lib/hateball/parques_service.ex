@@ -8,9 +8,9 @@ defmodule Hateball.ParquesService do
   every color has a this many spaces.
   """
   def last_space, do: 17
+  def last_space_heaven, do: 17 + 8
 
-  defp bad_movement_error({a, b}), do: "solo puede mover #{a} o #{b} espacios"
-  defp bad_movement_error(a), do: "solo puede mover #{a} espacios"
+  defp bad_movement_error(), do: "movimiento inválido"
 
   def create_world(
         name: name,
@@ -20,9 +20,6 @@ defmodule Hateball.ParquesService do
     all_positions = (for a <- 0..(player_count - 1), b <- 0..(piece_count - 1), do: {a, b})
     %ParquesWorld{
       name: name,
-      pieces_left: (0..(player_count - 1))
-                   |> Enum.zip(List.duplicate(piece_count, player_count))
-                   |> Map.new(),
       dices: {},
       positions: all_positions
                  |> Enum.map(fn elt -> {elt, :jail} end)
@@ -30,7 +27,8 @@ defmodule Hateball.ParquesService do
       game_state: {0, :to_play},
       second_lap: all_positions
                   |> Enum.map(fn key -> {key, false} end)
-                  |> Map.new()
+                  |> Map.new(),
+      player_count: player_count
     }
   end
 
@@ -58,18 +56,17 @@ defmodule Hateball.ParquesService do
   @spec play_turn(ParquesWorld, tuple) :: ParquesWorld
   def play_turn(world, {piece, amount_to_move}) do
     {current_player, _state} = world.game_state
-    if not can_move(world.dices, amount_to_move) do
-      {:error, bad_movement_error(world.dices)}
+    if not is_movement_valid?(world, {piece, amount_to_move}) do
+      {:error, bad_movement_error()}
     else
       world = calculate_new_position_second_lap(
         world,
         {piece, amount_to_move}
       )
       new_dices = use_dices(world.dices, amount_to_move)
-      player_count = Kernel.map_size(world.pieces_left)
       new_game_state = case new_dices do
         {_} -> {current_player, :move_second}
-        {} -> {rem(current_player + 1, player_count), :to_play}
+        {} -> {rem(current_player + 1, world.player_count), :to_play}
       end
 
       {
@@ -96,21 +93,29 @@ defmodule Hateball.ParquesService do
     }
   end
 
-  defp calculate_new_position_second_lap(world, {piece, amount}) do
+  defp calculate_new_position_second_lap(world, {piece_id, amount}) do
     {player, _} = world.game_state
-    piece_key = {player, piece}
-    %{^piece_key => {color, curr_pos}} = world.positions
-    player_count = Kernel.map_size(world.pieces_left)
+    piece = {player, piece_id}
+    %{^piece => {color, curr_pos}} = world.positions
 
     new_pos = curr_pos + amount
-    advance_colors = div(new_pos, last_space())
-    new_pos = rem(new_pos, last_space())
-    new_color = rem(color + advance_colors, player_count)
+    moved_to =
+      if world.second_lap[piece] and new_pos >= salida()  do
+        if new_pos == last_space_heaven() - 1 do
+          :heaven
+        else
+          {color, new_pos}
+        end
+      else
+        advance_colors = div(new_pos, last_space())
+        new_pos = rem(new_pos, last_space())
+        new_color = rem(color + advance_colors, world.player_count)
+        {new_color, new_pos}
+      end
 
-    positions = Map.put(world.positions, piece_key, {new_color, new_pos})
-
+    positions = Map.put(world.positions, piece, moved_to)
     made_a_lap = new_pos < curr_pos
-    second_lap = Map.put(world.second_lap, piece_key, made_a_lap)
+    second_lap = Map.put(world.second_lap, piece, made_a_lap)
 
     %{world | :positions => positions, :second_lap => second_lap}
   end
@@ -125,8 +130,24 @@ defmodule Hateball.ParquesService do
     end
   end
 
-  defp can_move({a}, to_move), do: to_move == a
-  defp can_move({a, b}, to_move) do
+  defp is_movement_valid?(world, {piece, amount}) do
+    if not uses_dice_values?(world.dices, amount) do
+      false
+    else
+      {player, _} = world.game_state
+      piece_key = {player, piece}
+      {_, pos} = world.positions[piece_key]
+      if not world.second_lap[piece_key] do
+        true
+      else
+        (pos + amount) <= last_space_heaven()
+      end
+    end
+  end
+
+  defp uses_dice_values?({a}, to_move), do: to_move == a
+  defp uses_dice_values?({a, b}, to_move) do
     to_move == a or to_move == b or to_move == (a + b)
   end
+
 end

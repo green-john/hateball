@@ -17,7 +17,6 @@ defmodule Hateball.ParquesServiceTest do
     assert Kernel.map_size(world.positions) == 16
     assert Enum.all?(world.positions, fn {_key, pos} -> pos == :jail end)
     assert world.game_state == {0, :to_play}
-    assert Enum.all?(world.pieces_left, &(Kernel.elem(&1, 1) == 4))
     assert Enum.all?(world.second_lap, fn {_, val} -> not val end)
   end
 
@@ -63,10 +62,10 @@ defmodule Hateball.ParquesServiceTest do
     {:ok, world} = create_initial_world(true)
 
     {:error, reason} = ParquesService.play_turn(world, {1, 1})
-    assert reason == "solo puede mover 3 o 3 espacios"
+    assert reason == "movimiento inválido"
 
     {:error, reason} = ParquesService.play_turn(world, {1, 4})
-    assert reason == "solo puede mover 3 o 3 espacios"
+    assert reason == "movimiento inválido"
   end
 
   test "player plays once move a piece" do
@@ -103,11 +102,8 @@ defmodule Hateball.ParquesServiceTest do
     {:ok, world} = create_initial_world(true)
     {:ok, world} = ParquesService.play_turn(world, {0, 6})
     world = ParquesService.out_of_jail(world, 1)
-    IO.inspect world
     {:ok, world} = ParquesService.play_turn(world, fn -> 4 end)
-    IO.inspect world
     {:ok, world} = ParquesService.play_turn(world, {0, 8})
-    IO.inspect world
 
     assert world.dices == {}
     assert world.positions[{1, 0}] == {1, 12}
@@ -142,7 +138,9 @@ defmodule Hateball.ParquesServiceTest do
                    |> update_pos({0, 0}, {3, 15})
                    |> ParquesService.play_turn(fn -> 2 end)
 
+    IO.inspect world
     {:ok, world} = ParquesService.play_turn(world, {0, 2})
+    IO.inspect world
 
     assert world.dices == {2}
     assert world.positions[{0, 0}] == {0, 0}
@@ -151,8 +149,8 @@ defmodule Hateball.ParquesServiceTest do
 
   test "player goes into heaven" do
     {:ok, world} = create_initial_world()
-                   |> ParquesService.out_of_jail(1)
-                   |> update_pos({0, 0}, {3, 15})
+                   |> ParquesService.out_of_jail(0)
+                   |> update_pos({0, 0}, {0, 15})
                    |> update_second_lap({0, 0}, true)
                    |> ParquesService.play_turn(fn -> 2 end)
 
@@ -162,10 +160,33 @@ defmodule Hateball.ParquesServiceTest do
     assert world.positions[{0, 0}] == {0, 17}
   end
 
-  # Going into heaven
+  test "error when player is in heaven and tries to move more than allowed" do
+    {:ok, world} = create_initial_world()
+                   |> ParquesService.out_of_jail(0)
+                   |> update_pos({0, 0}, {0, 17})
+                   |> update_second_lap({0, 0}, true)
+                   |> ParquesService.play_turn(fn -> 5 end)
+
+    {:error, reason} = ParquesService.play_turn(world, {0, 10})
+    assert reason == "movimiento inválido"
+  end
+
+  test "player takes one piece to heaven!!" do
+    {:ok, world} = create_initial_world()
+                   |> ParquesService.out_of_jail(0)
+                   |> update_second_lap({0, 0}, true)
+                   |> update_pos({0, 0}, {0, 16})
+                   |> ParquesService.play_turn(fn -> 4 end)
+
+    {:ok, world} = ParquesService.play_turn(world, {0, 8})
+    assert world.game_state == {1, :to_play}
+    assert world.positions[{0, 0}] == :heaven
+  end
+
   # Winning
   # Jail dynamics
   # Eating other pieces
+  # Rolling pairs
 
   defp create_initial_world(initialize \\ false) do
     world =

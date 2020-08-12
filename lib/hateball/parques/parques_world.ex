@@ -2,11 +2,11 @@ defmodule Hateball.ParquesWorld do
 
   defstruct [
     :name,
-    :pieces_left,
     :dices,
     :positions,
     :game_state,
     :second_lap,
+    :player_count,
   ]
 
 end
