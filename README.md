@@ -1,14 +1,16 @@
 # Hateball
 
-Collection of games. There's a card game. There's a table top game.
+Card game
+
+![demo](demo.gif)
 
 [Cards against humanity](https://en.wikipedia.org/wiki/Cards_Against_Humanity)
-[Parqués](https://en.wikipedia.org/wiki/Parqu%C3%A9s)
 
 ## Running
 
 ```
-mix setup
+mix deps.get
+npm install # (in ./assets)
 mix phx.server
 ```
 
@@ -16,7 +18,6 @@ Go to [`localhost:4000`](http://localhost:4000)
 
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
 
-  
 ## Deployment
 
 To deploy run (on the machine where it's being deployed):
